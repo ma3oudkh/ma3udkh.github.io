@@ -322,26 +322,24 @@
     <!-- Hidden Printable/Exportable Image Template Container -->
     <div id="exportImageTemplate" class="hidden md:fixed md:-left-[9999px] top-0 bg-white p-8 w-[1000px] font-sans text-slate-800" dir="rtl">
         <!-- Header -->
-        <div class="border-b-2 border-indigo-600 pb-4 mb-6 flex justify-between items-center">
-            <div>
-                <h1 id="exportImageTitle" class="text-2xl font-bold text-slate-900">لیست کارکرد -- --</h1>
-                <p class="text-xs text-slate-500 mt-1">گزارش شفاف کارکرد روزانه و محاسبه حقوق</p>
-            </div>
+        <div class="border-b-2 border-indigo-600 pb-4 mb-6">
+            <h1 id="exportImageTitle" class="text-3xl font-bold text-slate-900">لیست کارکرد -- --</h1>
+            <p class="text-sm text-slate-500 mt-1">گزارش شفاف کارکرد روزانه و محاسبه حقوق</p>
         </div>
 
         <!-- Multi-column Grid for Days -->
-        <div id="exportDaysGrid" class="grid grid-cols-2 gap-3 mb-6">
+        <div id="exportDaysGrid" class="grid grid-cols-2 gap-4 mb-6">
         </div>
 
         <!-- Footer Total Summary -->
-        <div class="bg-slate-900 text-white rounded-2xl p-5 flex justify-between items-center shadow-lg">
+        <div class="bg-slate-900 text-white rounded-2xl p-6 flex justify-between items-center shadow-lg">
             <div>
                 <span class="text-xs text-slate-400 block mb-1">مجموع کل کارکرد ماه:</span>
-                <span id="exportTotalHours" class="text-xl font-bold text-indigo-300">۰ ساعت و ۰ دقیقه</span>
+                <span id="exportTotalHours" class="text-2xl font-bold text-indigo-300">۰ ساعت و ۰ دقیقه</span>
             </div>
             <div class="text-left">
                 <span class="text-xs text-slate-400 block mb-1">مبلغ کل حقوق دریافتی:</span>
-                <span id="exportTotalSalary" class="text-2xl font-bold text-emerald-400">۰ تومان</span>
+                <span id="exportTotalSalary" class="text-3xl font-bold text-emerald-400">۰ تومان</span>
             </div>
         </div>
     </div>
@@ -837,7 +835,7 @@
         }
 
         /**
-         * PREPARE IMAGE TEMPLATE (HIGH READABILITY & PERSIAN FORMATTING)
+         * PREPARE IMAGE TEMPLATE (RIGHT-TO-LEFT, ENLARGED FONTS, CENTERED BADGES)
          */
         function prepareExportTemplate() {
             const monthName = persianMonthNames[selectedMonthIndex];
@@ -860,36 +858,40 @@
                 const dayMinutes = calculateDayMinutes(dayObj);
                 totalMonthMinutes += dayMinutes;
 
-                // Full Persian Date formatting (e.g. ۱/۸/۱۴۰۵)
-                const fullPersianDate = `${toPersianDigits(day)}/${toPersianDigits(selectedMonthIndex + 1)}/${toPersianDigits(selectedYear)}`;
+                // Right-to-Left Full Persian Date Structure (e.g. ۱۴۰۵/۰۸/۰۱)
+                const monthNumStr = String(selectedMonthIndex + 1).padStart(2, '0');
+                const dayNumStr = String(day).padStart(2, '0');
+                const fullPersianDate = `${toPersianDigits(selectedYear)}/${toPersianDigits(monthNumStr)}/${toPersianDigits(dayNumStr)}`;
 
-                let shiftsHtml = '<span class="text-slate-400 font-medium">---</span>';
+                let shiftsHtml = '<span class="text-slate-400 font-medium">تعطیل / ثبت نشده</span>';
                 if (dayObj.in1 || dayObj.in2) {
                     let parts = [];
                     if (dayObj.in1 && dayObj.out1) {
-                        parts.push(`ورود ${toPersianDigits(dayObj.in1)} تا ${toPersianDigits(dayObj.out1)}`);
+                        parts.push(`${toPersianDigits(dayObj.in1)} تا ${toPersianDigits(dayObj.out1)}`);
                     }
                     if (dayObj.in2 && dayObj.out2) {
-                        parts.push(`ورود ${toPersianDigits(dayObj.in2)} تا ${toPersianDigits(dayObj.out2)}`);
+                        parts.push(`${toPersianDigits(dayObj.in2)} تا ${toPersianDigits(dayObj.out2)}`);
                     }
-                    shiftsHtml = `<span class="text-slate-800 font-bold tracking-wide">${parts.join(' | ')}</span>`;
+                    shiftsHtml = `<span class="text-slate-900 font-bold tracking-wide">${parts.join(' | ')}</span>`;
                 }
 
                 const dayCard = document.createElement('div');
-                dayCard.className = `p-3 rounded-2xl border flex justify-between items-center text-xs shadow-sm ${isFriday ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
+                dayCard.className = `p-4 rounded-2xl border flex justify-between items-center text-sm shadow-sm ${isFriday ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
                 
                 dayCard.innerHTML = `
-                    <div class="flex flex-col gap-1">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-sm ${isFriday ? 'text-rose-600' : 'text-slate-900'}">${weekdayName}</span>
-                            <span class="text-[11px] text-slate-500 font-medium">(${fullPersianDate})</span>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex items-center gap-2.5">
+                            <span class="font-bold text-base ${isFriday ? 'text-rose-600' : 'text-slate-900'}">${weekdayName}</span>
+                            <span class="text-xs text-slate-500 font-semibold font-mono">(${fullPersianDate})</span>
                         </div>
-                        <div class="text-xs mt-0.5">
+                        <div class="text-sm mt-0.5">
                             ${shiftsHtml}
                         </div>
                     </div>
-                    <div class="text-left font-bold text-xs ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl border border-indigo-100' : 'text-slate-400'}">
-                        ${formatMinutesToHoursMinutes(dayMinutes)}
+                    <div class="flex items-center justify-center">
+                        <div class="text-center font-bold text-sm ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 px-3.5 py-1.5 rounded-xl border border-indigo-100' : 'text-slate-400'}">
+                            ${formatMinutesToHoursMinutes(dayMinutes)}
+                        </div>
                     </div>
                 `;
                 gridContainer.appendChild(dayCard);
