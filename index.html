@@ -320,15 +320,15 @@
     </div>
 
     <!-- Hidden Printable/Exportable Image Template Container -->
-    <div id="exportImageTemplate" class="hidden md:fixed md:-left-[9999px] top-0 bg-white p-8 w-[1000px] font-sans text-slate-800" dir="rtl">
+    <div id="exportImageTemplate" class="hidden md:fixed md:-left-[9999px] top-0 bg-white p-10 w-[1000px] font-sans text-slate-800" dir="rtl">
         <!-- Header -->
-        <div class="border-b-2 border-indigo-600 pb-4 mb-6">
+        <div class="border-b-2 border-indigo-600 pb-5 mb-8">
             <h1 id="exportImageTitle" class="text-3xl font-bold text-slate-900">لیست کارکرد -- --</h1>
-            <p class="text-sm text-slate-500 mt-1">گزارش شفاف کارکرد روزانه و محاسبه حقوق</p>
+            <p class="text-sm text-slate-500 mt-1.5">گزارش شفاف کارکرد روزانه و محاسبه حقوق</p>
         </div>
 
         <!-- Multi-column Grid for Days (Split into two vertical columns) -->
-        <div id="exportDaysGrid" class="grid grid-cols-2 gap-4 mb-6">
+        <div id="exportDaysGrid" class="grid grid-cols-2 gap-5 mb-8">
         </div>
 
         <!-- Footer Total Summary -->
@@ -835,7 +835,7 @@
         }
 
         /**
-         * PREPARE IMAGE TEMPLATE (VERTICAL COLUMN FLOW & NO OVERFLOW)
+         * PREPARE IMAGE TEMPLATE (TWO-ROW CLEAN LAYOUT WITH PROPER PADDING)
          */
         function prepareExportTemplate() {
             const monthName = persianMonthNames[selectedMonthIndex];
@@ -847,7 +847,7 @@
 
             const gridContainer = document.getElementById('exportDaysGrid');
             gridContainer.innerHTML = '';
-            gridContainer.className = "grid grid-cols-2 gap-4 mb-6";
+            gridContainer.className = "grid grid-cols-2 gap-5 mb-8";
 
             let totalMonthMinutes = 0;
             let allDaysCards = [];
@@ -872,33 +872,33 @@
                     if (dayObj.in2 && dayObj.out2) {
                         parts.push(`${toPersianDigits(dayObj.in2)} تا ${toPersianDigits(dayObj.out2)}`);
                     }
-                    shiftsHtml = `<span class="text-slate-900 font-bold tracking-wide text-xs sm:text-sm truncate">${parts.join(' | ')}</span>`;
+                    shiftsHtml = `<span class="text-slate-900 font-bold tracking-wide text-sm">${parts.join(' | ')}</span>`;
                 }
 
                 const dayCard = document.createElement('div');
-                dayCard.className = `p-3.5 rounded-2xl border flex justify-between items-center shadow-sm ${isFriday ? 'bg-rose-50/80 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
+                dayCard.className = `p-4 rounded-2xl border flex justify-between items-center shadow-sm ${isFriday ? 'bg-rose-50/80 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
                 
                 dayCard.innerHTML = `
-                    <div class="flex flex-col gap-1 text-right overflow-hidden pr-1">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-base ${isFriday ? 'text-rose-600' : 'text-slate-900'} shrink-0">${weekdayName}</span>
-                            <div class="flex items-center text-xs font-bold text-slate-500 gap-0.5 shrink-0" dir="rtl">
-                                <span>(</span>
-                                <span>${toPersianDigits(dayNumStr)}</span>
-                                <span>/</span>
-                                <span>${toPersianDigits(monthNumStr)}</span>
-                                <span>/</span>
-                                <span>${toPersianDigits(selectedYear)}</span>
-                                <span>)</span>
+                    <div class="flex flex-col gap-2 text-right w-full pr-1">
+                        <div class="flex items-center justify-between w-full">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-bold text-base ${isFriday ? 'text-rose-600' : 'text-slate-900'}">${weekdayName}</span>
+                                <div class="flex items-center text-xs font-bold text-slate-500 gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200" dir="rtl">
+                                    <span>${toPersianDigits(dayNumStr)}</span>
+                                    <span>/</span>
+                                    <span>${toPersianDigits(monthNumStr)}</span>
+                                    <span>/</span>
+                                    <span>${toPersianDigits(selectedYear)}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center shrink-0">
+                                <div class="text-center font-bold text-xs px-3.5 py-1.5 rounded-xl border ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-slate-400 bg-white border-slate-200'} whitespace-nowrap">
+                                    ${formatMinutesToHoursMinutes(dayMinutes)}
+                                </div>
                             </div>
                         </div>
-                        <div class="mt-0.5 truncate">
+                        <div class="pt-0.5">
                             ${shiftsHtml}
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-center shrink-0 pl-1">
-                        <div class="text-center font-bold text-xs px-3 py-1.5 rounded-xl border ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-slate-400 bg-white border-slate-200'} whitespace-nowrap">
-                            ${formatMinutesToHoursMinutes(dayMinutes)}
                         </div>
                     </div>
                 `;
@@ -908,9 +908,9 @@
             // Split days into two vertical columns sequentially (Right column gets 1st half, Left column gets 2nd half)
             const midpoint = Math.ceil(daysInMonth / 2);
             const rightCol = document.createElement('div');
-            rightCol.className = "flex flex-col gap-3";
+            rightCol.className = "flex flex-col gap-3.5";
             const leftCol = document.createElement('div');
-            leftCol.className = "flex flex-col gap-3";
+            leftCol.className = "flex flex-col gap-3.5";
 
             for (let i = 0; i < daysInMonth; i++) {
                 if (i < midpoint) {
