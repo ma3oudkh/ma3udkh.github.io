@@ -171,7 +171,7 @@
                     <span class="text-purple-100 text-xs font-semibold">مجموع ساعت اعشاری</span>
                     <div class="bg-purple-400/30 p-2 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
                     </div>
                 </div>
@@ -835,7 +835,7 @@
         }
 
         /**
-         * PREPARE IMAGE TEMPLATE (RIGHT-TO-LEFT, ENLARGED FONTS, CENTERED BADGES)
+         * PREPARE IMAGE TEMPLATE (STRICT RIGHT-TO-LEFT PERSIAN DATE & BALANCED BADGES)
          */
         function prepareExportTemplate() {
             const monthName = persianMonthNames[selectedMonthIndex];
@@ -858,12 +858,11 @@
                 const dayMinutes = calculateDayMinutes(dayObj);
                 totalMonthMinutes += dayMinutes;
 
-                // Right-to-Left Full Persian Date Structure (e.g. ۱۴۰۵/۰۸/۰۱)
                 const monthNumStr = String(selectedMonthIndex + 1).padStart(2, '0');
                 const dayNumStr = String(day).padStart(2, '0');
-                const fullPersianDate = `${toPersianDigits(selectedYear)}/${toPersianDigits(monthNumStr)}/${toPersianDigits(dayNumStr)}`;
 
-                let shiftsHtml = '<span class="text-slate-400 font-medium">تعطیل / ثبت نشده</span>';
+                // Clean Shifts (No 'ورود' text)
+                let shiftsHtml = '<span class="text-slate-400 font-medium text-xs">تعطیل / ثبت نشده</span>';
                 if (dayObj.in1 || dayObj.in2) {
                     let parts = [];
                     if (dayObj.in1 && dayObj.out1) {
@@ -872,24 +871,32 @@
                     if (dayObj.in2 && dayObj.out2) {
                         parts.push(`${toPersianDigits(dayObj.in2)} تا ${toPersianDigits(dayObj.out2)}`);
                     }
-                    shiftsHtml = `<span class="text-slate-900 font-bold tracking-wide">${parts.join(' | ')}</span>`;
+                    shiftsHtml = `<span class="text-slate-900 font-bold tracking-wide text-sm">${parts.join(' | ')}</span>`;
                 }
 
                 const dayCard = document.createElement('div');
-                dayCard.className = `p-4 rounded-2xl border flex justify-between items-center text-sm shadow-sm ${isFriday ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
+                dayCard.className = `p-3.5 rounded-2xl border flex justify-between items-center shadow-sm ${isFriday ? 'bg-rose-50/80 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
                 
                 dayCard.innerHTML = `
-                    <div class="flex flex-col gap-1.5">
-                        <div class="flex items-center gap-2.5">
+                    <div class="flex flex-col gap-1 text-right">
+                        <div class="flex items-center gap-2">
                             <span class="font-bold text-base ${isFriday ? 'text-rose-600' : 'text-slate-900'}">${weekdayName}</span>
-                            <span class="text-xs text-slate-500 font-semibold font-mono">(${fullPersianDate})</span>
+                            <div class="flex items-center text-xs font-bold text-slate-500 gap-0.5" dir="rtl">
+                                <span>(</span>
+                                <span>${toPersianDigits(dayNumStr)}</span>
+                                <span>/</span>
+                                <span>${toPersianDigits(monthNumStr)}</span>
+                                <span>/</span>
+                                <span>${toPersianDigits(selectedYear)}</span>
+                                <span>)</span>
+                            </div>
                         </div>
-                        <div class="text-sm mt-0.5">
+                        <div class="mt-0.5">
                             ${shiftsHtml}
                         </div>
                     </div>
-                    <div class="flex items-center justify-center">
-                        <div class="text-center font-bold text-sm ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 px-3.5 py-1.5 rounded-xl border border-indigo-100' : 'text-slate-400'}">
+                    <div class="flex items-center justify-center shrink-0">
+                        <div class="text-center font-bold text-xs px-3 py-1.5 rounded-xl border ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-slate-400 bg-white border-slate-200'}">
                             ${formatMinutesToHoursMinutes(dayMinutes)}
                         </div>
                     </div>
