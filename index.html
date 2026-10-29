@@ -118,12 +118,12 @@
                 </button>
                 <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
 
-                <!-- Export Image Button -->
+                <!-- Export Image Preview Button -->
                 <button onclick="exportMonthAsImage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-100 flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    دانلود عکس تک‌صفحه‌ای (PNG)
+                    پیش‌نمایش و ذخیره عکس (PNG)
                 </button>
 
                 <!-- Fallback Print Button -->
@@ -285,6 +285,40 @@
         </div>
     </div>
 
+    <!-- Image Preview Modal (In-App Live Preview & Direct Share) -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-5 max-h-[90vh] flex flex-col justify-between space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-900">پیش‌نمایش تصویر کارکرد ماهانه</h3>
+                <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Scrollable Image Preview -->
+            <div class="flex-grow overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-2 flex justify-center items-center">
+                <img id="previewImageElement" class="max-w-full h-auto rounded-xl shadow-sm" alt="پیش‌نمایش کارکرد">
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex flex-wrap sm:flex-nowrap gap-2 justify-end">
+                <button onclick="shareOrSaveImage()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    ذخیره مستقیم در گالری / اشتراک‌گذاری
+                </button>
+                <a id="directDownloadAnchor" download="Karkard.png" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs">
+                    دانلود فایل عکس
+                </a>
+                <button onclick="closePreviewModal()" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2.5 rounded-xl transition text-xs">
+                    بستن
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden Printable/Exportable Image Template Container -->
     <div id="exportImageTemplate" class="hidden md:fixed md:-left-[9999px] top-0 bg-white p-8 w-[1000px] font-sans text-slate-800" dir="rtl">
         <!-- Header -->
@@ -326,6 +360,8 @@
         const DB_VERSION = 1;
         const STORE_NAME = 'work_app_store';
         let db = null;
+        let generatedBlob = null;
+        let currentImageFileName = 'Karkard.png';
 
         function initIndexedDB() {
             return new Promise((resolve) => {
@@ -850,6 +886,7 @@
             document.getElementById('exportTotalSalary').textContent = `${salary.toLocaleString('fa-IR')} تومان`;
         }
 
+        // Export & Preview Handler (Bypasses WebView Download Restricts)
         function exportMonthAsImage() {
             if (typeof html2canvas === 'undefined') {
                 alert('کتابخانه ساخت عکس در دسترس نیست (احتمالاً اتصال اینترنت قطع است). لطفاً از دکمه «چاپ / PDF» استفاده کنید.');
@@ -857,7 +894,7 @@
             }
 
             prepareExportTemplate();
-            showToast('در حال آماده‌سازی و دانلود فایل عکس...');
+            showToast('در حال ساخت پیش‌نمایش تصویر...');
 
             const target = document.getElementById('exportImageTemplate');
             target.classList.remove('hidden');
@@ -869,15 +906,58 @@
             }).then(canvas => {
                 target.classList.add('hidden');
                 const monthName = persianMonthNames[selectedMonthIndex];
-                const link = document.createElement('a');
-                link.download = `کارکرد_${monthName}_${selectedYear}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                showToast('فایل عکس تک‌صفحه‌ای دانلود شد.');
+                currentImageFileName = `کارکرد_${monthName}_${selectedYear}.png`;
+
+                const dataUrl = canvas.toDataURL('image/png');
+
+                // Set preview image source in modal
+                document.getElementById('previewImageElement').src = dataUrl;
+                
+                // Set direct download link
+                const anchor = document.getElementById('directDownloadAnchor');
+                anchor.href = dataUrl;
+                anchor.download = currentImageFileName;
+
+                // Store Blob for Android Share API
+                canvas.toBlob((blob) => {
+                    generatedBlob = blob;
+                }, 'image/png');
+
+                // Open Modal
+                document.getElementById('previewModal').classList.remove('hidden');
+
             }).catch(err => {
                 target.classList.add('hidden');
                 alert('خطا در ایجاد عکس. لطفاً از دکمه چاپ استفاده کنید.');
             });
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.add('hidden');
+        }
+
+        // Native Android File Share API (Saves to Gallery via Android Intent)
+        async function shareOrSaveImage() {
+            if (!generatedBlob) return;
+
+            try {
+                const file = new File([generatedBlob], currentImageFileName, { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'گزارش کارکرد ماهانه',
+                        text: 'گزارش کارکرد و حقوق ماهانه'
+                    });
+                    showToast('عکس با موفقیت اشتراک‌گذاری/ذخیره شد.');
+                } else {
+                    // Fallback download
+                    document.getElementById('directDownloadAnchor').click();
+                }
+            } catch (err) {
+                console.log('Share error:', err);
+                document.getElementById('directDownloadAnchor').click();
+            }
         }
 
         function prepareAndPrint() {
