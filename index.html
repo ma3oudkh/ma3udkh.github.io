@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#191817">
+    <meta name="description" content="ثبت کارکرد روزانه و محاسبه حقوق بر اساس تقویم شمسی؛ با ذخیره‌سازی محلی اطلاعات.">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <title>مدیریت کارکرد و حقوق شمسی (پایگاه داده آفلاین)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -785,7 +790,7 @@
             showToast('تنظیمات دستمزد با موفقیت ذخیره شد.');
         }
 
-        function exportDataJSON() {
+        async function exportDataJSON() {
             const backup = {
                 appName: "JalaliWorkHoursCalculator",
                 exportDate: new Date().toISOString(),
@@ -794,13 +799,36 @@
                 selectedMonthIndex,
                 appWorkData
             };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+            const jsonText = JSON.stringify(backup, null, 2);
+            const fileName = `Jalali_Work_Backup_${selectedYear}_${selectedMonthIndex + 1}.json`;
+            const file = new File([jsonText], fileName, { type: 'application/json' });
+
+            // Prefer Android's native share sheet when file sharing is supported.
+            try {
+                if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'پشتیبان اطلاعات کارکرد',
+                        text: 'فایل پشتیبان اطلاعات کارکرد و حقوق'
+                    });
+                    showToast('فایل پشتیبان برای اشتراک‌گذاری آماده شد.');
+                    return;
+                }
+            } catch (err) {
+                // If sharing is cancelled or unsupported, fall back to a normal download.
+                if (err && err.name === 'AbortError') return;
+                console.warn('File share unavailable; falling back to download.', err);
+            }
+
+            const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
             const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `Jalali_Work_Backup_${selectedYear}_${selectedMonthIndex + 1}.json`);
+            dl.href = url;
+            dl.download = fileName;
             document.body.appendChild(dl);
             dl.click();
             dl.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast('فایل دیتابیس پشتیبان دانلود شد.');
         }
 
@@ -1026,6 +1054,14 @@
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
+        }
+
+        // PWA: cache the app shell after the first successful online visit.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .catch(error => console.warn('Service Worker registration failed:', error));
+            });
         }
 
         window.onload = function() {
