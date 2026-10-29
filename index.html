@@ -327,8 +327,8 @@
             <p class="text-sm text-slate-500 mt-1.5">گزارش شفاف کارکرد روزانه و محاسبه حقوق</p>
         </div>
 
-        <!-- Multi-column Grid for Days (Split into two vertical columns with fixed width safety) -->
-        <div id="exportDaysGrid" class="grid grid-cols-2 gap-6 mb-8 items-start">
+        <!-- Multi-column Grid for Days (Split into two vertical columns) -->
+        <div id="exportDaysGrid" class="grid grid-cols-2 gap-x-8 gap-y-4 mb-8 items-start">
         </div>
 
         <!-- Footer Total Summary -->
@@ -835,7 +835,7 @@
         }
 
         /**
-         * PREPARE IMAGE TEMPLATE (STABLE, ISOLATED ROWS & SECURE PADDING)
+         * PREPARE IMAGE TEMPLATE (CLEAN, NO BACKGROUND BOXES FOR SHIFTS, PERFECT PADDING)
          */
         function prepareExportTemplate() {
             const monthName = persianMonthNames[selectedMonthIndex];
@@ -847,7 +847,7 @@
 
             const gridContainer = document.getElementById('exportDaysGrid');
             gridContainer.innerHTML = '';
-            gridContainer.className = "grid grid-cols-2 gap-6 mb-8 items-start";
+            gridContainer.className = "grid grid-cols-2 gap-x-8 gap-y-4 mb-8 items-start";
 
             let totalMonthMinutes = 0;
             let allDaysCards = [];
@@ -863,7 +863,8 @@
                 const monthNumStr = String(selectedMonthIndex + 1).padStart(2, '0');
                 const dayNumStr = String(day).padStart(2, '0');
 
-                let shiftsHtml = '<span class="text-slate-400 font-medium text-xs">تعطیل / ثبت نشده</span>';
+                // Shift hours without background boxes, styled with font weights & colors
+                let shiftsHtml = '<span class="text-slate-400 font-normal text-xs">تعطیل / ثبت نشده</span>';
                 if (dayObj.in1 || dayObj.in2) {
                     let parts = [];
                     if (dayObj.in1 && dayObj.out1) {
@@ -876,15 +877,14 @@
                 }
 
                 const dayCard = document.createElement('div');
-                // Added strict flex-col and secure inner padding to prevent text overflow
-                dayCard.className = `p-4 rounded-2xl border flex flex-col gap-3 shadow-sm ${isFriday ? 'bg-rose-50/90 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
+                dayCard.className = `p-4 rounded-2xl border flex flex-col gap-2.5 shadow-sm ${isFriday ? 'bg-rose-50/80 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
                 
                 dayCard.innerHTML = `
                     <!-- Row 1: Day Name + Date (Right) and Daily Total Hours (Left) -->
                     <div class="flex items-center justify-between gap-2 w-full">
                         <div class="flex items-center gap-2.5 min-w-0">
                             <span class="font-bold text-base ${isFriday ? 'text-rose-600' : 'text-slate-900'} shrink-0">${weekdayName}</span>
-                            <div class="flex items-center text-xs font-bold text-slate-600 gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shrink-0" dir="rtl">
+                            <div class="flex items-center text-xs font-bold text-slate-500 gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shrink-0" dir="rtl">
                                 <span>${toPersianDigits(dayNumStr)}</span>
                                 <span>/</span>
                                 <span>${toPersianDigits(monthNumStr)}</span>
@@ -893,15 +893,15 @@
                             </div>
                         </div>
                         <div class="shrink-0">
-                            <div class="text-center font-bold text-xs px-3.5 py-1.5 rounded-xl border ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-slate-400 bg-white border-slate-200'} whitespace-nowrap">
+                            <div class="text-center font-bold text-xs px-3 py-1.5 rounded-xl border ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-slate-400 bg-white border-slate-200'} whitespace-nowrap">
                                 ${formatMinutesToHoursMinutes(dayMinutes)}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Row 2: Shift Hours (Completely isolated below with top border separator) -->
-                    <div class="pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600 w-full">
-                        <span class="font-semibold text-slate-500 shrink-0">ساعت کاری:</span>
+                    <!-- Row 2: Shift Hours (No background box, distinct styling) -->
+                    <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs w-full">
+                        <span class="font-semibold text-slate-400 shrink-0">ساعت کاری:</span>
                         <div class="text-left min-w-0 truncate">
                             ${shiftsHtml}
                         </div>
