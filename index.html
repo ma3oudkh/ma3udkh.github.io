@@ -325,20 +325,16 @@
         <div class="border-b-2 border-indigo-600 pb-4 mb-6 flex justify-between items-center">
             <div>
                 <h1 id="exportImageTitle" class="text-2xl font-bold text-slate-900">لیست کارکرد -- --</h1>
-                <p class="text-xs text-slate-500 mt-1">گزارش کارکرد ماهانه و محاسبه حقوق</p>
-            </div>
-            <div class="text-left bg-indigo-50 border border-indigo-100 rounded-xl p-3">
-                <span class="text-xs text-indigo-500 block font-semibold">وضعیت:</span>
-                <span class="text-sm font-bold text-indigo-700">تکمیل شده</span>
+                <p class="text-xs text-slate-500 mt-1">گزارش شفاف کارکرد روزانه و محاسبه حقوق</p>
             </div>
         </div>
 
         <!-- Multi-column Grid for Days -->
-        <div id="exportDaysGrid" class="grid grid-cols-2 gap-4 mb-6">
+        <div id="exportDaysGrid" class="grid grid-cols-2 gap-3 mb-6">
         </div>
 
         <!-- Footer Total Summary -->
-        <div class="bg-slate-900 text-white rounded-2xl p-5 flex justify-between items-center">
+        <div class="bg-slate-900 text-white rounded-2xl p-5 flex justify-between items-center shadow-lg">
             <div>
                 <span class="text-xs text-slate-400 block mb-1">مجموع کل کارکرد ماه:</span>
                 <span id="exportTotalHours" class="text-xl font-bold text-indigo-300">۰ ساعت و ۰ دقیقه</span>
@@ -362,6 +358,11 @@
         let db = null;
         let generatedBlob = null;
         let currentImageFileName = 'Karkard.png';
+
+        function toPersianDigits(str) {
+            if (str === null || str === undefined) return '';
+            return str.toString().replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+        }
 
         function initIndexedDB() {
             return new Promise((resolve) => {
@@ -544,7 +545,7 @@
             for (let y = 1400; y <= 1410; y++) {
                 const opt = document.createElement('option');
                 opt.value = y;
-                opt.textContent = y + (isJalaliLeapYear(y) ? ' (کبیسه)' : '');
+                opt.textContent = toPersianDigits(y) + (isJalaliLeapYear(y) ? ' (کبیسه)' : '');
                 if (y === selectedYear) opt.selected = true;
                 yearSelect.appendChild(opt);
             }
@@ -582,8 +583,8 @@
             const firstDayWeekdayIdx = getJalaliWeekday(selectedYear, selectedMonthIndex + 1, 1);
             const firstDayWeekdayName = weekDayNames[firstDayWeekdayIdx];
 
-            document.getElementById('currentMonthTitle').textContent = `${monthName} ${selectedYear}`;
-            document.getElementById('currentMonthDaysBadge').textContent = `${daysInMonth} روز`;
+            document.getElementById('currentMonthTitle').textContent = `${monthName} ${toPersianDigits(selectedYear)}`;
+            document.getElementById('currentMonthDaysBadge').textContent = `${toPersianDigits(daysInMonth)} روز`;
             document.getElementById('firstDayBadge').textContent = `شروع ماه: ${firstDayWeekdayName}`;
 
             const storageKey = `${selectedYear}_${selectedMonthIndex}`;
@@ -617,11 +618,11 @@
                 row.innerHTML = `
                     <div class="flex items-center gap-3 min-w-[160px]">
                         <div class="w-10 h-10 rounded-xl ${isFriday ? 'bg-rose-100 text-rose-700 font-bold' : 'bg-slate-100 text-slate-700 font-bold'} flex items-center justify-center text-sm shadow-sm">
-                            ${day}
+                            ${toPersianDigits(day)}
                         </div>
                         <div>
                             <div class="text-xs font-bold ${isFriday ? 'text-rose-600' : 'text-slate-800'}">${weekdayName} ${isFriday ? '(تعطیل)' : ''}</div>
-                            <div class="text-[11px] text-slate-400">${day} ${monthName} ${selectedYear}</div>
+                            <div class="text-[11px] text-slate-400">${toPersianDigits(day)} ${monthName} ${toPersianDigits(selectedYear)}</div>
                         </div>
                     </div>
 
@@ -691,7 +692,7 @@
             if (mins <= 0) return '۰ ساعت و ۰ دقیقه';
             const h = Math.floor(mins / 60);
             const m = mins % 60;
-            return `${h.toLocaleString('fa-IR')} ساعت و ${m.toLocaleString('fa-IR')} دقیقه`;
+            return `${toPersianDigits(h)} ساعت و ${toPersianDigits(m)} دقیقه`;
         }
 
         function updateTotalsDisplay(totalMins, workedDays, totalDays) {
@@ -700,10 +701,10 @@
             const salary = Math.round(decimalHours * hourlyRate);
 
             document.getElementById('totalHoursFormatted').textContent = formatMinutesToHoursMinutes(totalMins);
-            document.getElementById('totalHoursDecimal').textContent = `${parseFloat(decimalHoursStr).toLocaleString('fa-IR')} ساعت`;
-            document.getElementById('totalSalaryAmount').textContent = `${salary.toLocaleString('fa-IR')} تومان`;
-            document.getElementById('hourlyRateDisplay').textContent = `دست مزد هر ساعت: ${hourlyRate.toLocaleString('fa-IR')} تومان`;
-            document.getElementById('daysWorkedCount').textContent = `${workedDays.toLocaleString('fa-IR')} از ${totalDays.toLocaleString('fa-IR')} روز`;
+            document.getElementById('totalHoursDecimal').textContent = `${toPersianDigits(parseFloat(decimalHoursStr).toLocaleString('fa-IR'))} ساعت`;
+            document.getElementById('totalSalaryAmount').textContent = `${toPersianDigits(salary.toLocaleString('fa-IR'))} تومان`;
+            document.getElementById('hourlyRateDisplay').textContent = `دست مزد هر ساعت: ${toPersianDigits(hourlyRate.toLocaleString('fa-IR'))} تومان`;
+            document.getElementById('daysWorkedCount').textContent = `${toPersianDigits(workedDays)} از ${toPersianDigits(totalDays)} روز`;
         }
 
         function updateShiftData(day, key, val) {
@@ -835,13 +836,16 @@
             reader.readAsText(file);
         }
 
+        /**
+         * PREPARE IMAGE TEMPLATE (HIGH READABILITY & PERSIAN FORMATTING)
+         */
         function prepareExportTemplate() {
             const monthName = persianMonthNames[selectedMonthIndex];
             const daysInMonth = getJalaliMonthDays(selectedYear, selectedMonthIndex);
             const storageKey = `${selectedYear}_${selectedMonthIndex}`;
             const monthData = appWorkData[storageKey] || {};
 
-            document.getElementById('exportImageTitle').textContent = `لیست کارکرد ${monthName} ${selectedYear}`;
+            document.getElementById('exportImageTitle').textContent = `لیست کارکرد ${monthName} ${toPersianDigits(selectedYear)}`;
 
             const gridContainer = document.getElementById('exportDaysGrid');
             gridContainer.innerHTML = '';
@@ -856,23 +860,35 @@
                 const dayMinutes = calculateDayMinutes(dayObj);
                 totalMonthMinutes += dayMinutes;
 
-                let shiftsText = '---';
+                // Full Persian Date formatting (e.g. ۱/۸/۱۴۰۵)
+                const fullPersianDate = `${toPersianDigits(day)}/${toPersianDigits(selectedMonthIndex + 1)}/${toPersianDigits(selectedYear)}`;
+
+                let shiftsHtml = '<span class="text-slate-400 font-medium">---</span>';
                 if (dayObj.in1 || dayObj.in2) {
                     let parts = [];
-                    if (dayObj.in1) parts.push(`ش۱: ${dayObj.in1}-${dayObj.out1}`);
-                    if (dayObj.in2) parts.push(`ش۲: ${dayObj.in2}-${dayObj.out2}`);
-                    shiftsText = parts.join(' | ');
+                    if (dayObj.in1 && dayObj.out1) {
+                        parts.push(`ورود ${toPersianDigits(dayObj.in1)} تا ${toPersianDigits(dayObj.out1)}`);
+                    }
+                    if (dayObj.in2 && dayObj.out2) {
+                        parts.push(`ورود ${toPersianDigits(dayObj.in2)} تا ${toPersianDigits(dayObj.out2)}`);
+                    }
+                    shiftsHtml = `<span class="text-slate-800 font-bold tracking-wide">${parts.join(' | ')}</span>`;
                 }
 
                 const dayCard = document.createElement('div');
-                dayCard.className = `p-2.5 rounded-xl border text-xs flex justify-between items-center ${isFriday ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
+                dayCard.className = `p-3 rounded-2xl border flex justify-between items-center text-xs shadow-sm ${isFriday ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
                 
                 dayCard.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-slate-800 ${isFriday ? 'text-rose-600' : ''}">${day} ${weekdayName}:</span>
-                        <span class="text-slate-600 font-mono">${shiftsText}</span>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-sm ${isFriday ? 'text-rose-600' : 'text-slate-900'}">${weekdayName}</span>
+                            <span class="text-[11px] text-slate-500 font-medium">(${fullPersianDate})</span>
+                        </div>
+                        <div class="text-xs mt-0.5">
+                            ${shiftsHtml}
+                        </div>
                     </div>
-                    <div class="font-bold ${dayMinutes > 0 ? 'text-indigo-600' : 'text-slate-400'}">
+                    <div class="text-left font-bold text-xs ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl border border-indigo-100' : 'text-slate-400'}">
                         ${formatMinutesToHoursMinutes(dayMinutes)}
                     </div>
                 `;
@@ -883,7 +899,7 @@
             const salary = Math.round(decimalHours * hourlyRate);
 
             document.getElementById('exportTotalHours').textContent = formatMinutesToHoursMinutes(totalMonthMinutes);
-            document.getElementById('exportTotalSalary').textContent = `${salary.toLocaleString('fa-IR')} تومان`;
+            document.getElementById('exportTotalSalary').textContent = `${toPersianDigits(salary.toLocaleString('fa-IR'))} تومان`;
         }
 
         // Export & Preview Handler (Bypasses WebView Download Restricts)
