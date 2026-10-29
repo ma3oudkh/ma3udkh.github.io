@@ -6,6 +6,8 @@
     <title>مدیریت کارکرد و حقوق شمسی (پایگاه داده آفلاین)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas جهت تبدیل بخش مشخص شده به عکس PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Vazirmatn Font -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script>
@@ -42,24 +44,12 @@
             cursor: pointer;
             filter: opacity(0.6);
         }
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            body {
-                background: white;
-            }
-            .print-card {
-                border: 1px solid #e2e8f0 !important;
-                box-shadow: none !important;
-            }
-        }
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col justify-between">
 
     <!-- Top Header -->
-    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-30 no-print">
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div class="bg-indigo-600 text-white p-2.5 rounded-2xl shadow-md shadow-indigo-200">
@@ -84,7 +74,6 @@
                 <div class="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
                     <span class="text-xs font-semibold text-slate-500 px-2">سال:</span>
                     <select id="yearSelect" onchange="changeYear(this.value)" class="bg-white text-slate-800 rounded-lg px-3 py-1.5 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <!-- Populated dynamically -->
                     </select>
                 </div>
 
@@ -112,11 +101,12 @@
                 </button>
                 <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
 
-                <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-100 flex items-center gap-1.5">
+                <!-- Export Image Button -->
+                <button onclick="exportMonthAsImage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-100 flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    چاپ
+                    دانلود عکس تک‌صفحه‌ای (PNG)
                 </button>
             </div>
         </div>
@@ -126,9 +116,8 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
 
         <!-- Month Navigation Tabs -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2 overflow-x-auto no-print">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2 overflow-x-auto">
             <div id="monthTabs" class="flex gap-1.5 min-w-max pb-1">
-                <!-- Dynamically generated -->
             </div>
         </div>
 
@@ -136,10 +125,10 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <!-- Hours and Minutes -->
-            <div class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white rounded-2xl p-5 shadow-lg shadow-indigo-100 flex flex-col justify-between print-card">
+            <div class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white rounded-2xl p-5 shadow-lg shadow-indigo-100 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
                     <span class="text-indigo-100 text-xs font-semibold">مجموع کارکرد ماهانه</span>
-                    <div class="bg-indigo-400/30 p-2 rounded-xl no-print">
+                    <div class="bg-indigo-400/30 p-2 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -152,10 +141,10 @@
             </div>
 
             <!-- Decimal Hours -->
-            <div class="bg-gradient-to-br from-purple-600 to-indigo-800 text-white rounded-2xl p-5 shadow-lg shadow-purple-100 flex flex-col justify-between print-card">
+            <div class="bg-gradient-to-br from-purple-600 to-indigo-800 text-white rounded-2xl p-5 shadow-lg shadow-purple-100 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
                     <span class="text-purple-100 text-xs font-semibold">مجموع ساعت اعشاری</span>
-                    <div class="bg-purple-400/30 p-2 rounded-xl no-print">
+                    <div class="bg-purple-400/30 p-2 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
@@ -168,10 +157,10 @@
             </div>
 
             <!-- Total Wage Salary -->
-            <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl p-5 shadow-lg shadow-emerald-100 flex flex-col justify-between print-card">
+            <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl p-5 shadow-lg shadow-emerald-100 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
                     <span class="text-emerald-100 text-xs font-semibold">مبلغ کل کارکرد حقوق</span>
-                    <div class="bg-emerald-400/30 p-2 rounded-xl no-print">
+                    <div class="bg-emerald-400/30 p-2 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -184,12 +173,12 @@
             </div>
 
             <!-- Preset Controls -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between print-card">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
                 <div class="flex justify-between items-start">
                     <span class="text-slate-500 text-xs font-semibold">روزهای کارکرد و ابزارها</span>
                     <span id="daysWorkedCount" class="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg">۰ از ۰ روز</span>
                 </div>
-                <div class="mt-3 flex flex-col gap-2 no-print">
+                <div class="mt-3 flex flex-col gap-2">
                     <button onclick="applyDefaultSchedule()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold py-2 px-3 rounded-xl transition">
                         تکمیل خودکار روزکاری (08:00 - 17:00)
                     </button>
@@ -231,21 +220,20 @@
             </div>
             
             <div id="daysContainer" class="divide-y divide-slate-100">
-                <!-- Day rows populated dynamically -->
             </div>
         </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 mt-12 py-6 no-print">
+    <footer class="bg-white border-t border-slate-200 mt-12 py-6">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
             <p>سامانه مدیریت کارکرد و حقوق شمسی • تمام اطلاعات بر روی حافظه دستگاه شما محفوظ باقی می‌ماند.</p>
         </div>
     </footer>
 
     <!-- Wage Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-6">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
                 <h3 class="text-lg font-bold text-slate-900">تنظیمات دستمزد ساعتی</h3>
@@ -272,501 +260,24 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-6 left-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-sm flex items-center gap-3 no-print">
-        <span id="toastMessage">عملیات انجام شد</span>
-    </div>
+    <!-- Hidden Printable Image Template Container -->
+    <div id="exportImageTemplate" class="fixed -left-[9999px] top-0 bg-white p-8 w-[1000px] font-sans text-slate-800" dir="rtl">
+        <!-- Header -->
+        <div class="border-b-2 border-indigo-600 pb-4 mb-6 flex justify-between items-center">
+            <div>
+                <h1 id="exportImageTitle" class="text-2xl font-bold text-slate-900">لیست کارکرد -- --</h1>
+                <p class="text-xs text-slate-500 mt-1">گزارش کارکرد ماهانه و محاسبه حقوق</p>
+            </div>
+            <div class="text-left bg-indigo-50 border border-indigo-100 rounded-xl p-3">
+                <span class="text-xs text-indigo-500 block font-semibold">وضعیت:</span>
+                <span class="text-sm font-bold text-indigo-700">تکمیل شده</span>
+            </div>
+        </div>
 
-    <script>
-        const DB_NAME = 'JalaliWorkHoursDB';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'work_app_store';
-        let db = null;
+        <!-- Multi-column Grid for Days -->
+        <div id="exportDaysGrid" class="grid grid-cols-2 gap-4 mb-6">
+            <!-- Populated via JS dynamically -->
+        </div>
 
-        function initIndexedDB() {
-            return new Promise((resolve, reject) => {
-                if (!window.indexedDB) {
-                    resolve(null);
-                    return;
-                }
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onerror = () => resolve(null);
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    resolve(db);
-                };
-                request.onupgradeneeded = (event) => {
-                    const dbInstance = event.target.result;
-                    if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
-                        dbInstance.createObjectStore(STORE_NAME);
-                    }
-                };
-            });
-        }
-
-        async function saveToDB(key, val) {
-            try {
-                localStorage.setItem(key, typeof val === 'object' ? JSON.stringify(val) : val);
-            } catch (e) {}
-
-            if (db) {
-                try {
-                    const tx = db.transaction(STORE_NAME, 'readwrite');
-                    const store = tx.objectStore(STORE_NAME);
-                    store.put(val, key);
-                } catch (e) {}
-            }
-            triggerAutoSaveUI();
-        }
-
-        async function loadFromDB(key) {
-            let localData = localStorage.getItem(key);
-            if (localData !== null) {
-                try {
-                    return JSON.parse(localData);
-                } catch (e) {
-                    return localData;
-                }
-            }
-            if (db) {
-                return new Promise((resolve) => {
-                    try {
-                        const tx = db.transaction(STORE_NAME, 'readonly');
-                        const store = tx.objectStore(STORE_NAME);
-                        const req = store.get(key);
-                        req.onsuccess = () => resolve(req.result || null);
-                        req.onerror = () => resolve(null);
-                    } catch (e) { resolve(null); }
-                });
-            }
-            return null;
-        }
-
-        function triggerAutoSaveUI() {
-            const el = document.getElementById('autoSaveIndicator');
-            if (el) {
-                el.classList.remove('hidden');
-                setTimeout(() => el.classList.add('hidden'), 1500);
-            }
-        }
-
-        const persianMonthNames = [
-            "فروردین", "اردیبهشت", "خرداد",
-            "تیر", "مرداد", "شهریور",
-            "مهر", "آبان", "آذر",
-            "دی", "بهمن", "اسفند"
-        ];
-
-        const weekDayNames = [
-            "شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه"
-        ];
-
-        function jalaliToGregorian(jy, jm, jd) {
-            let sal_a = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-            let gy = (jy <= 979) ? 621 : 1600;
-            jy -= (jy <= 979) ? 0 : 979;
-            let days = (365 * jy) + (Math.floor(jy / 33) * 8) + Math.floor(((jy % 33) + 3) / 4) + 78 + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
-            gy += 400 * Math.floor(days / 146097);
-            days %= 146097;
-            if (days > 36524) {
-                gy += 100 * Math.floor(--days / 36524);
-                days %= 36524;
-                if (days >= 365) days++;
-            }
-            gy += 4 * Math.floor(days / 1461);
-            days %= 1461;
-            if (days > 365) {
-                gy += Math.floor((days - 1) / 365);
-                days = (days - 1) % 365;
-            }
-            let gd = days + 1;
-            let gm = 0;
-            for (let i = 0; i < 12; i++) {
-                let v = sal_a[i];
-                if (i === 1 && ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0))) v++;
-                if (gd <= v) {
-                    gm = i;
-                    break;
-                }
-            }
-            if (gm === 0) gm = 12;
-            gd = gd - (sal_a[gm - 1] + (gm > 2 && ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 1 : 0));
-            return new Date(gy, gm - 1, gd);
-        }
-
-        function getJalaliWeekday(jy, jm, jd) {
-            const gDate = jalaliToGregorian(jy, jm, jd);
-            const dayOfWeek = gDate.getDay();
-            return (dayOfWeek + 1) % 7;
-        }
-
-        function isJalaliLeapYear(jy) {
-            const breaks = [-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178];
-            let bl = breaks.length, jp = breaks[0], jm, jump = 0, n, i;
-            if (jy < jp || jy >= breaks[bl - 1]) return false;
-            for (i = 1; i < bl; i += 1) {
-                jm = breaks[i];
-                jump = jm - jp;
-                if (jy < jm) break;
-                jp = jm;
-            }
-            n = jy - jp;
-            if (jump - n < 6) n = n - jump + Math.floor((jump + 4) / 33) * 33;
-            let leap = (((((n + 1) % 33) - 1) % 4) === 0);
-            if (n === -1) leap = true;
-            return leap;
-        }
-
-        function getJalaliMonthDays(jy, monthIndex) {
-            if (monthIndex < 6) return 31;
-            if (monthIndex < 11) return 30;
-            return isJalaliLeapYear(jy) ? 30 : 29;
-        }
-
-        let selectedYear = 1405;
-        let selectedMonthIndex = 7;
-        let hourlyRate = 150000;
-        let appWorkData = {};
-
-        async function loadAllState() {
-            await initIndexedDB();
-            
-            const savedRate = await loadFromDB('jalali_hourly_rate');
-            if (savedRate !== null) hourlyRate = parseFloat(savedRate);
-
-            const savedYear = await loadFromDB('jalali_selected_year');
-            if (savedYear !== null) selectedYear = parseInt(savedYear);
-
-            const savedMonth = await loadFromDB('jalali_selected_month');
-            if (savedMonth !== null) selectedMonthIndex = parseInt(savedMonth);
-
-            const savedData = await loadFromDB('jalali_work_app_data_v2');
-            if (savedData !== null) appWorkData = typeof savedData === 'string' ? JSON.parse(savedData) : savedData;
-        }
-
-        function persistAllState() {
-            saveToDB('jalali_hourly_rate', hourlyRate);
-            saveToDB('jalali_selected_year', selectedYear);
-            saveToDB('jalali_selected_month', selectedMonthIndex);
-            saveToDB('jalali_work_app_data_v2', appWorkData);
-        }
-
-        async function init() {
-            await loadAllState();
-            populateYearSelector();
-            renderMonthTabs();
-            renderCalendarView();
-        }
-
-        function populateYearSelector() {
-            const yearSelect = document.getElementById('yearSelect');
-            yearSelect.innerHTML = '';
-            for (let y = 1400; y <= 1410; y++) {
-                const opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y + (isJalaliLeapYear(y) ? ' (کبیسه)' : '');
-                if (y === selectedYear) opt.selected = true;
-                yearSelect.appendChild(opt);
-            }
-        }
-
-        function changeYear(newYear) {
-            selectedYear = parseInt(newYear);
-            persistAllState();
-            populateYearSelector();
-            renderCalendarView();
-        }
-
-        function renderMonthTabs() {
-            const container = document.getElementById('monthTabs');
-            container.innerHTML = '';
-
-            persianMonthNames.forEach((mName, idx) => {
-                const btn = document.createElement('button');
-                btn.className = `px-3.5 py-1.5 rounded-xl text-xs font-semibold transition whitespace-nowrap ${selectedMonthIndex === idx ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 font-bold' : 'text-slate-600 hover:bg-slate-100'}`;
-                btn.textContent = mName;
-                btn.onclick = () => {
-                    selectedMonthIndex = idx;
-                    persistAllState();
-                    renderMonthTabs();
-                    renderCalendarView();
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function renderCalendarView() {
-            const monthName = persianMonthNames[selectedMonthIndex];
-            const daysInMonth = getJalaliMonthDays(selectedYear, selectedMonthIndex);
-
-            const firstDayWeekdayIdx = getJalaliWeekday(selectedYear, selectedMonthIndex + 1, 1);
-            const firstDayWeekdayName = weekDayNames[firstDayWeekdayIdx];
-
-            document.getElementById('currentMonthTitle').textContent = `${monthName} ${selectedYear}`;
-            document.getElementById('currentMonthDaysBadge').textContent = `${daysInMonth} روز`;
-            document.getElementById('firstDayBadge').textContent = `شروع ماه: ${firstDayWeekdayName}`;
-
-            const storageKey = `${selectedYear}_${selectedMonthIndex}`;
-            if (!appWorkData[storageKey]) appWorkData[storageKey] = {};
-
-            const monthData = appWorkData[storageKey];
-            const daysContainer = document.getElementById('daysContainer');
-            daysContainer.innerHTML = '';
-
-            let totalMonthMinutes = 0;
-            let workedDaysCount = 0;
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const weekdayIdx = getJalaliWeekday(selectedYear, selectedMonthIndex + 1, day);
-                const weekdayName = weekDayNames[weekdayIdx];
-                const isFriday = (weekdayIdx === 6);
-
-                if (!monthData[day]) {
-                    monthData[day] = { in1: '', out1: '', in2: '', out2: '' };
-                }
-
-                const dayObj = monthData[day];
-                const dayMinutes = calculateDayMinutes(dayObj);
-
-                if (dayMinutes > 0) workedDaysCount++;
-                totalMonthMinutes += dayMinutes;
-
-                const row = document.createElement('div');
-                row.className = `p-3 sm:p-4 transition hover:bg-slate-50 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 ${isFriday ? 'bg-rose-50/60 border-r-4 border-rose-500' : (dayMinutes > 0 ? 'bg-emerald-50/20' : '')}`;
-
-                row.innerHTML = `
-                    <div class="flex items-center gap-3 min-w-[160px]">
-                        <div class="w-10 h-10 rounded-xl ${isFriday ? 'bg-rose-100 text-rose-700 font-bold' : 'bg-slate-100 text-slate-700 font-bold'} flex items-center justify-center text-sm shadow-sm">
-                            ${day}
-                        </div>
-                        <div>
-                            <div class="text-xs font-bold ${isFriday ? 'text-rose-600' : 'text-slate-800'}">${weekdayName} ${isFriday ? '(تعطیل)' : ''}</div>
-                            <div class="text-[11px] text-slate-400">${day} ${monthName} ${selectedYear}</div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-grow max-w-xl no-print">
-                        <div class="bg-white border border-slate-200 rounded-xl p-2 flex items-center gap-2 shadow-sm">
-                            <span class="text-[11px] font-semibold text-slate-500 w-12">شیفت ۱:</span>
-                            <div class="flex items-center gap-1 flex-grow">
-                                <input type="time" step="60" value="${dayObj.in1 || ''}" onchange="updateShiftData(${day}, 'in1', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs w-full text-center font-mono focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                                <span class="text-slate-300">تا</span>
-                                <input type="time" step="60" value="${dayObj.out1 || ''}" onchange="updateShiftData(${day}, 'out1', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs w-full text-center font-mono focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            </div>
-                        </div>
-
-                        <div class="bg-white border border-slate-200 rounded-xl p-2 flex items-center gap-2 shadow-sm">
-                            <span class="text-[11px] font-semibold text-slate-500 w-12">شیفت ۲:</span>
-                            <div class="flex items-center gap-1 flex-grow">
-                                <input type="time" step="60" value="${dayObj.in2 || ''}" onchange="updateShiftData(${day}, 'in2', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs w-full text-center font-mono focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                                <span class="text-slate-300">تا</span>
-                                <input type="time" step="60" value="${dayObj.out2 || ''}" onchange="updateShiftData(${day}, 'out2', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs w-full text-center font-mono focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between lg:justify-end gap-3 min-w-[160px]">
-                        <div class="text-left">
-                            <div class="text-xs font-bold ${dayMinutes > 0 ? 'text-indigo-700' : 'text-slate-400'}">${formatMinutesToHoursMinutes(dayMinutes)}</div>
-                            <div class="text-[10px] text-slate-400">کارکرد روز</div>
-                        </div>
-                        <button onclick="clearDayData(${day})" title="حذف اطلاعات این روز" class="text-slate-300 hover:text-rose-600 p-1.5 rounded-lg transition no-print">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                    </div>
-                `;
-                daysContainer.appendChild(row);
-            }
-
-            updateTotalsDisplay(totalMonthMinutes, workedDaysCount, daysInMonth);
-        }
-
-        function parseTimeToMinutes(timeStr) {
-            if (!timeStr) return 0;
-            const parts = timeStr.split(':');
-            if (parts.length !== 2) return 0;
-            return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
-        }
-
-        function calculateDayMinutes(dayObj) {
-            let total = 0;
-            if (dayObj.in1 && dayObj.out1) {
-                let start = parseTimeToMinutes(dayObj.in1);
-                let end = parseTimeToMinutes(dayObj.out1);
-                if (end < start) end += 24 * 60;
-                total += (end - start);
-            }
-            if (dayObj.in2 && dayObj.out2) {
-                let start = parseTimeToMinutes(dayObj.in2);
-                let end = parseTimeToMinutes(dayObj.out2);
-                if (end < start) end += 24 * 60;
-                total += (end - start);
-            }
-            return total;
-        }
-
-        function formatMinutesToHoursMinutes(mins) {
-            if (mins <= 0) return '۰ ساعت و ۰ دقیقه';
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            return `${h.toLocaleString('fa-IR')} ساعت و ${m.toLocaleString('fa-IR')} دقیقه`;
-        }
-
-        function updateTotalsDisplay(totalMins, workedDays, totalDays) {
-            const decimalHours = totalMins / 60;
-            const decimalHoursStr = decimalHours.toFixed(2);
-            const salary = Math.round(decimalHours * hourlyRate);
-
-            document.getElementById('totalHoursFormatted').textContent = formatMinutesToHoursMinutes(totalMins);
-            document.getElementById('totalHoursDecimal').textContent = `${parseFloat(decimalHoursStr).toLocaleString('fa-IR')} ساعت`;
-            document.getElementById('totalSalaryAmount').textContent = `${salary.toLocaleString('fa-IR')} تومان`;
-            document.getElementById('hourlyRateDisplay').textContent = `دست مزد هر ساعت: ${hourlyRate.toLocaleString('fa-IR')} تومان`;
-            document.getElementById('daysWorkedCount').textContent = `${workedDays.toLocaleString('fa-IR')} از ${totalDays.toLocaleString('fa-IR')} روز`;
-        }
-
-        function updateShiftData(day, key, val) {
-            const storageKey = `${selectedYear}_${selectedMonthIndex}`;
-            if (!appWorkData[storageKey]) appWorkData[storageKey] = {};
-            if (!appWorkData[storageKey][day]) {
-                appWorkData[storageKey][day] = { in1: '', out1: '', in2: '', out2: '' };
-            }
-
-            appWorkData[storageKey][day][key] = val;
-            persistAllState();
-            renderCalendarView();
-        }
-
-        function clearDayData(day) {
-            const storageKey = `${selectedYear}_${selectedMonthIndex}`;
-            if (appWorkData[storageKey]?.[day]) {
-                appWorkData[storageKey][day] = { in1: '', out1: '', in2: '', out2: '' };
-                persistAllState();
-                renderCalendarView();
-                showToast('اطلاعات کارکرد این روز حذف شد.');
-            }
-        }
-
-        function applyDefaultSchedule() {
-            const daysInMonth = getJalaliMonthDays(selectedYear, selectedMonthIndex);
-            const storageKey = `${selectedYear}_${selectedMonthIndex}`;
-            if (!appWorkData[storageKey]) appWorkData[storageKey] = {};
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                const weekdayIdx = getJalaliWeekday(selectedYear, selectedMonthIndex + 1, d);
-                if (weekdayIdx !== 6) {
-                    appWorkData[storageKey][d] = {
-                        in1: '08:00',
-                        out1: '17:00',
-                        in2: '',
-                        out2: ''
-                    };
-                }
-            }
-
-            persistAllState();
-            renderCalendarView();
-            showToast('شیفت کاری پیش‌فرض برای روزهای کاری تنظیم شد.');
-        }
-
-        function clearCurrentMonth() {
-            const storageKey = `${selectedYear}_${selectedMonthIndex}`;
-            if (appWorkData[storageKey]) {
-                appWorkData[storageKey] = {};
-                persistAllState();
-                renderCalendarView();
-                showToast('اطلاعات کارکرد این ماه پاک شد.');
-            }
-        }
-
-        function formatHourlyRateInput(input) {
-            let val = input.value.replace(/[^0-9]/g, '');
-            input.value = val ? parseInt(val, 10).toLocaleString('en-US') : '';
-        }
-
-        function openSettingsModal() {
-            document.getElementById('hourlyRateInput').value = hourlyRate ? hourlyRate.toLocaleString('en-US') : '';
-            document.getElementById('settingsModal').classList.remove('hidden');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
-        }
-
-        function saveSettings() {
-            const rawVal = document.getElementById('hourlyRateInput').value.replace(/,/g, '');
-            const val = parseFloat(rawVal);
-            if (!isNaN(val) && val >= 0) {
-                hourlyRate = val;
-            }
-            persistAllState();
-            closeSettingsModal();
-            renderCalendarView();
-            showToast('تنظیمات دستمزد با موفقیت ذخیره شد.');
-        }
-
-        function exportDataJSON() {
-            const backup = {
-                appName: "JalaliWorkHoursCalculator",
-                exportDate: new Date().toISOString(),
-                hourlyRate,
-                selectedYear,
-                selectedMonthIndex,
-                appWorkData
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `Jalali_Work_Backup_${selectedYear}_${selectedMonthIndex + 1}.json`);
-            document.body.appendChild(dl);
-            dl.click();
-            dl.remove();
-            showToast('فایل دیتابیس پشتیبان دانلود شد.');
-        }
-
-        function triggerImportJSON() {
-            document.getElementById('importFileInput').click();
-        }
-
-        function importDataJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.appWorkData) {
-                        appWorkData = parsed.appWorkData;
-                        if (parsed.hourlyRate) hourlyRate = parsed.hourlyRate;
-                        if (parsed.selectedYear) selectedYear = parsed.selectedYear;
-                        if (parsed.selectedMonthIndex !== undefined) selectedMonthIndex = parsed.selectedMonthIndex;
-
-                        persistAllState();
-                        populateYearSelector();
-                        renderMonthTabs();
-                        renderCalendarView();
-                        showToast('اطلاعات پشتیبان با موفقیت در دیتابیس بازیابی شد.');
-                    }
-                } catch (err) {
-                    showToast('خطا در بارگذاری فایل پشتیبان!');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        window.onload = function() {
-            init();
-        };
-    </script>
-</body>
-</html>
+        <!-- Footer Total Summary -->
+        <div class="bg-slate-900 text-white rounded-2xl p-5 flex justify
