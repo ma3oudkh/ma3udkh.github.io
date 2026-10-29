@@ -876,28 +876,32 @@
                 }
 
                 const dayCard = document.createElement('div');
-                dayCard.className = `p-4 rounded-2xl border flex justify-between items-center shadow-sm ${isFriday ? 'bg-rose-50/80 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
+                dayCard.className = `p-4.5 rounded-2xl border flex flex-col gap-2.5 shadow-sm ${isFriday ? 'bg-rose-50/90 border-rose-200' : 'bg-slate-50 border-slate-200'}`;
                 
                 dayCard.innerHTML = `
-                    <div class="flex flex-col gap-2 text-right w-full pr-1">
-                        <div class="flex items-center justify-between w-full">
-                            <div class="flex items-center gap-2.5">
-                                <span class="font-bold text-base ${isFriday ? 'text-rose-600' : 'text-slate-900'}">${weekdayName}</span>
-                                <div class="flex items-center text-xs font-bold text-slate-500 gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200" dir="rtl">
-                                    <span>${toPersianDigits(dayNumStr)}</span>
-                                    <span>/</span>
-                                    <span>${toPersianDigits(monthNumStr)}</span>
-                                    <span>/</span>
-                                    <span>${toPersianDigits(selectedYear)}</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-center shrink-0">
-                                <div class="text-center font-bold text-xs px-3.5 py-1.5 rounded-xl border ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-slate-400 bg-white border-slate-200'} whitespace-nowrap">
-                                    ${formatMinutesToHoursMinutes(dayMinutes)}
-                                </div>
+                    <!-- Row 1: Day Name + Date (Right) and Daily Total Hours (Left) -->
+                    <div class="flex items-center justify-between gap-3 w-full">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="font-bold text-base ${isFriday ? 'text-rose-600' : 'text-slate-900'} shrink-0">${weekdayName}</span>
+                            <div class="flex items-center text-xs font-bold text-slate-600 gap-1 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shrink-0" dir="rtl">
+                                <span>${toPersianDigits(dayNumStr)}</span>
+                                <span>/</span>
+                                <span>${toPersianDigits(monthNumStr)}</span>
+                                <span>/</span>
+                                <span>${toPersianDigits(selectedYear)}</span>
                             </div>
                         </div>
-                        <div class="pt-0.5">
+                        <div class="shrink-0">
+                            <div class="text-center font-bold text-xs px-3.5 py-1.5 rounded-xl border ${dayMinutes > 0 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-slate-400 bg-white border-slate-200'} whitespace-nowrap">
+                                ${formatMinutesToHoursMinutes(dayMinutes)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Shift Hours (Cleanly separated below) -->
+                    <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+                        <span class="font-semibold text-slate-500">ساعت کاری:</span>
+                        <div class="text-left">
                             ${shiftsHtml}
                         </div>
                     </div>
