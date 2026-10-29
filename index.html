@@ -1,1 +1,268 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابدار ساعت کاری و حقوق</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Tesseract.js برای OCR آفلاین -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5/dist/tesseract.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap');
+        body { font-family: 'Vazirmatn', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- هدر برنامه -->
+        <header class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-teal-400">حسابدار هوشمند ساعت کاری</h1>
+                <p class="text-sm text-slate-400 mt-1">مدیریت شیفت‌ها، محاسبه حقوق و اسکنر هوشمند دست‌خط (آفلاین و امن)</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('cameraInput').click()" class="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 transition shadow-lg cursor-pointer">
+                    📸 اسکن دفتر با دوربین
+                </button>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageScan(event)">
+            </div>
+        </header>
+
+        <!-- پنل تنظیمات و نرخ حقوق -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">نرخ حقوق هر ساعت (تومان):</label>
+                <input type="number" id="hourlyRate" value="50000" onchange="saveSettings()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-teal-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">تاریخ انتخابی (Jalali):</label>
+                <div class="flex gap-2">
+                    <input type="text" id="selectedDate" placeholder="1405/01/01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-teal-500">
+                    <button onclick="loadDayData()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2.5 rounded-xl text-sm transition">بارگذاری</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- فرم ورود شیفت‌ها -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+            <h2 class="text-lg font-semibold text-teal-300 border-b border-slate-700 pb-3">ثبت شیفت‌های روزانه</h2>
+            
+            <div id="ocrStatus" class="hidden bg-teal-900/50 border border-teal-600 text-teal-200 text-sm p-3 rounded-xl">
+                در حال پردازش عکس و استخراج ساعت‌ها... لطفاً چند لحظه صبر کنید.
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">ورود اول (Shift 1 In)</label>
+                    <input type="text" id="shift1In" placeholder="08:00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-center text-lg tracking-wider">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">خروج اول (Shift 1 Out)</label>
+                    <input type="text" id="shift1Out" placeholder="13:00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-center text-lg tracking-wider">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">ورود دوم (Shift 2 In)</label>
+                    <input type="text" id="shift2In" placeholder="16:00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-center text-lg tracking-wider">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">خروج دوم (Shift 2 Out)</label>
+                    <input type="text" id="shift2Out" placeholder="20:00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-center text-lg tracking-wider">
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="saveDayData()" class="bg-teal-600 hover:bg-teal-500 text-white font-medium px-6 py-2.5 rounded-xl transition shadow-lg cursor-pointer">
+                    ذخیره اطلاعات روز
+                </button>
+            </div>
+        </div>
+
+        <!-- کارت خلاصه و محاسبات -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/50">
+                <span class="text-xs text-slate-400 block mb-1">مجموع ساعات کاری امروز</span>
+                <span id="totalHoursText" class="text-xl font-bold text-teal-400">۰ ساعت و ۰ دقیقه</span>
+            </div>
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/50">
+                <span class="text-xs text-slate-400 block mb-1">مجموع اعشاری</span>
+                <span id="totalDecimalText" class="text-xl font-bold text-slate-200">۰.۰۰ ساعت</span>
+            </div>
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/50">
+                <span class="text-xs text-slate-400 block mb-1">حقوق محاسبه شده</span>
+                <span id="totalSalaryText" class="text-xl font-bold text-amber-400">۰ تومان</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // مدیریت IndexedDB برای ذخیره‌سازی محلی
+        let db;
+        const dbName = "WorkHoursDB";
+        const storeName = "shifts";
+
+        function initDB() {
+            const request = indexedDB.open(dbName, 1);
+            request.onerror = (e) => console.error("خطا در باز کردن دیتابیس", e);
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                loadDayData();
+            };
+            request.onupgradeneeded = (e) => {
+                db = e.target.result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: "date" });
+                }
+            };
+        }
+
+        // تنظیم تاریخ امروز به صورت پیش‌فرض (شمسی ساده یا فرمت رشته‌ای)
+        document.getElementById('selectedDate').value = "1405/01/01";
+        initDB();
+
+        function saveSettings() {
+            calculateTotals();
+        }
+
+        function parseTimeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            // تبدیل اعداد فارسی به انگلیسی
+            const englishStr = timeStr.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+            const parts = englishStr.split(':');
+            if (parts.length !== 2) return 0;
+            const hours = parseInt(parts[0], 10) || 0;
+            const minutes = parseInt(parts[1], 10) || 0;
+            return (hours * 60) + minutes;
+        }
+
+        function calculateTotals() {
+            const s1in = parseTimeToMinutes(document.getElementById('shift1In').value);
+            const s1out = parseTimeToMinutes(document.getElementById('shift1Out').value);
+            const s2in = parseTimeToMinutes(document.getElementById('shift2In').value);
+            const s2out = parseTimeToMinutes(document.getElementById('shift2Out').value);
+
+            let totalMinutes = 0;
+            if (s1out > s1in) totalMinutes += (s1out - s1in);
+            if (s2out > s2in) totalMinutes += (s2out - s2in);
+
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            const decimalHours = (totalMinutes / 60).toFixed(2);
+            
+            const rate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            const salary = Math.round((totalMinutes / 60) * rate);
+
+            document.getElementById('totalHoursText').innerText = `${hours} ساعت و ${minutes} دقیقه`;
+            document.getElementById('totalDecimalText').innerText = `${decimalHours} ساعت`;
+            document.getElementById('totalSalaryText').innerText = salary.toLocaleString() + ' تومان';
+        }
+
+        // شنونده برای آپدیت لحظه‌ای مقادیر با تغییر ورودی‌ها
+        ['shift1In', 'shift1Out', 'shift2In', 'shift2Out'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculateTotals);
+        });
+
+        function saveDayData() {
+            if (!db) return;
+            const date = document.getElementById('selectedDate').value;
+            const data = {
+                date: date,
+                shift1In: document.getElementById('shift1In').value,
+                shift1Out: document.getElementById('shift1Out').value,
+                shift2In: document.getElementById('shift2In').value,
+                shift2Out: document.getElementById('shift2Out').value
+            };
+
+            const transaction = db.transaction([storeName], "readwrite");
+            const store = transaction.objectStore(storeName);
+            store.put(data);
+
+            transaction.oncomplete = () => {
+                alert("اطلاعات روز با موفقیت ذخیره شد!");
+            };
+        }
+
+        function loadDayData() {
+            if (!db) return;
+            const date = document.getElementById('selectedDate').value;
+            const transaction = db.transaction([storeName], "readonly");
+            const store = transaction.objectStore(storeName);
+            const request = store.get(date);
+
+            request.onsuccess = (e) => {
+                const res = e.target.result;
+                if (res) {
+                    document.getElementById('shift1In').value = res.shift1In || '';
+                    document.getElementById('shift1Out').value = res.shift1Out || '';
+                    document.getElementById('shift2In').value = res.shift2In || '';
+                    document.getElementById('shift2Out').value = res.shift2Out || '';
+                } else {
+                    document.getElementById('shift1In').value = '';
+                    document.getElementById('shift1Out').value = '';
+                    document.getElementById('shift2In').value = '';
+                    document.getElementById('shift2Out').value = '';
+                }
+                calculateTotals();
+            };
+        }
+
+        // عملکرد اسکن هوشمند عکس با Tesseract.js (بدون ذخیره‌سازی عکس)
+        async function handleImageScan(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('ocrStatus');
+            statusEl.classList.remove('hidden');
+
+            try {
+                // پردازش تصویر در حافظه موقت مرورگر بدون ذخیره‌سازی روی دیسک یا سرور
+                const result = await Tesseract.recognize(
+                    file,
+                    'fas+eng',
+                    { 
+                        logger: m => console.log(m) 
+                    }
+                );
+
+                const text = result.data.text;
+                console.log("OCR Extracted Text:", text);
+
+                // استخراج تمام الگوهای زمانی مشابه HH:MM یا اعداد ساعت از متن استخراج شده
+                // تبدیل اعداد فارسی به انگلیسی برای تنظیم راحت‌تر Regex
+                const normalizedText = text.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+                
+                // جستجوی الگوهای زمان مثل 8:30 یا 08:30 یا 17:00
+                const timeRegex = /\b([0-1]?[0-9]|2[0-3])[:\s]([0-5][0-9])\b/g;
+                let matches = [];
+                let match;
+                while ((match = timeRegex.exec(normalizedText)) !== null) {
+                    matches.push(`${match[1].padStart(2, '0')}:${match[2]}`);
+                }
+
+                // اگر الگوهای ساعت پیدا شد، به ترتیب در فیلدها قرار می‌دهیم
+                if (matches.length > 0) {
+                    if (matches[0]) document.getElementById('shift1In').value = matches[0];
+                    if (matches[1]) document.getElementById('shift1Out').value = matches[1];
+                    if (matches[2]) document.getElementById('shift2In').value = matches[2];
+                    if (matches[3]) document.getElementById('shift2Out').value = matches[3];
+                    calculateTotals();
+                    alert("ساعت‌ها با موفقیت از روی تصویر استخراج و جای‌گذاری شدند!");
+                } else {
+                    alert("ساعت معتبری در عکس تشخیص داده نشد. لطفاً عکس واضح‌تری بگیرید.");
+                }
+
+            } catch (err) {
+                console.error("OCR Error:", err);
+                alert("خطا در پردازش تصویر رخ داد.");
+            } finally {
+                statusEl.classList.add('hidden');
+                // پاک‌سازی حافظه موقت ورودی فایل
+                event.target.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
 
